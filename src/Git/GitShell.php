@@ -63,4 +63,24 @@ class GitShell
     {
         return shell_exec("git clean -df");
     }
+
+    public static function removeMergedBranches(): ?string
+    {
+        $branchesInline = trim(shell_exec("git branch --merged | egrep -v '(^\*|master)'"));
+        $result = '';
+
+        if(empty($branchesInline)) {
+            return 'Nothing to remove';
+        }
+
+        foreach (explode("\n", trim($branchesInline)) as $branchToRemove) {
+            // Clean local branches that have already been merged to master
+            $result .= $branchToRemove."\n";
+            $result .= shell_exec(sprintf("git branch -d %s", $branchToRemove));
+        }
+        // Then we clean the repository
+        $result .= shell_exec("git fetch --prune");
+
+        return $result;
+    }
 }
