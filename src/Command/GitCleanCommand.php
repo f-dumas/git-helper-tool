@@ -17,6 +17,16 @@ class GitCleanCommand extends Command
     private MessageOutput $outputDisplayer;
     private bool $removeMergedBranches = false;
 
+    private const OPTION_UNTRACKED_FILES = 'remove-untracked-files';
+    private const OPTION_IGNORED_FILES = 'remove-ignored-files';
+    private const OPTION_MERGED_BRANCHES = 'remove-merged-branches';
+    private const OPTION_ALL = 'all';
+
+    // God mode
+    private bool $enableAllOptions = false;
+    private array $enabledConfigurations = [];
+
+
     public function __construct()
     {
         parent::__construct();
@@ -30,7 +40,10 @@ class GitCleanCommand extends Command
             // the full command description shown when running the command with
             // the "--help" option
             ->setHelp('This command help you to clean your git projects')
-            ->addOption('remove-merged-branches', null, InputOption::VALUE_NONE, 'Remove the branches that have already been merged to master.');
+            ->addOption(static::OPTION_UNTRACKED_FILES, null, InputOption::VALUE_NONE, 'Remove untracked files and modifications.')
+            ->addOption(static::OPTION_IGNORED_FILES, null, InputOption::VALUE_NONE, 'Remove ignored files.')
+            ->addOption(static::OPTION_MERGED_BRANCHES, null, InputOption::VALUE_NONE, 'Remove the branches that have already been merged to master.')
+            ->addOption(static::OPTION_ALL, null, InputOption::VALUE_NONE, 'Enable all options.');
 
         parent::configure();
 
@@ -39,8 +52,20 @@ class GitCleanCommand extends Command
 
     private function initOptionsAndArguments(InputInterface $input): void
     {
-        if ($input->getOption("remove-merged-branches")) {
-            $this->removeMergedBranches = true;
+        if ($input->getOption(static::OPTION_ALL)) {
+            $this->enableAllOptions = true;
+
+            // Useless to check the other options
+            return;
+        }
+        if ($input->getOption(static::OPTION_IGNORED_FILES)) {
+            $this->enabledConfigurations[static::OPTION_IGNORED_FILES] = true;
+        }
+        if ($input->getOption(static::OPTION_UNTRACKED_FILES)) {
+            $this->enabledConfigurations[static::OPTION_UNTRACKED_FILES] = true;
+        }
+        if ($input->getOption(static::OPTION_MERGED_BRANCHES)) {
+            $this->enabledConfigurations[static::OPTION_MERGED_BRANCHES] = true;
         }
     }
 
@@ -48,6 +73,16 @@ class GitCleanCommand extends Command
     {
         $this->outputDisplayer = new MessageOutput($output);
     }
+
+    public function isOptionEnabled(string $option): bool
+    {
+        if ($this->enableAllOptions || (isset($this->enabledConfigurations[$option]) && $this->enabledConfigurations[$option])) {
+            return true;
+        }
+
+        return false;
+    }
+
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -67,6 +102,9 @@ class GitCleanCommand extends Command
 
     private function cleanUntrackedFiles(): void
     {
+        if (!$this->isOptionEnabled(self::OPTION_UNTRACKED_FILES)) {
+            return;
+        }
         $this->outputDisplayer->display('Clean untracked files', "question");
         $this->outputDisplayer->display(
             GitShell::executeGitCleanUntrackedFiles()
@@ -75,6 +113,9 @@ class GitCleanCommand extends Command
 
     private function cleanIgnoredFiles(): void
     {
+        if (!$this->isOptionEnabled(self::OPTION_IGNORED_FILES)) {
+            return;
+        }
         $this->outputDisplayer->display('Clean ignored files', "question");
         $this->outputDisplayer->display(
             GitShell::executeGitCleanIgnoredFiles()
@@ -83,10 +124,9 @@ class GitCleanCommand extends Command
 
     private function cleanMergedBranches(): void
     {
-        if (!$this->removeMergedBranches) {
+        if (!$this->isOptionEnabled(self::OPTION_MERGED_BRANCHES)) {
             return;
         }
-
         $this->outputDisplayer->display('Remove merged branches', "question");
         $this->outputDisplayer->display(
             GitShell::removeMergedBranches()
