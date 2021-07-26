@@ -37,10 +37,18 @@ This command will help you clean your repositories by removing the untracked and
 Use it with the following command:
  
  ```
- php git-clean
+ php git-clean --options
  
  #Or run help
  php git-checker  --help
  ```
 
+Run everything:
+```
+php git-clean --all
+```
 
+Run only a specific command
+```
+php git-clean --remove-ignored-files
+```
