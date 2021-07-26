@@ -64,22 +64,19 @@ class GitShell
         return shell_exec("git clean -df");
     }
 
-    public static function removeMergedBranches()
+    public static function removeMergedBranches(): ?string
     {
-        $result = shell_exec("$(git branch --merged | egrep -v '(^\*|master)')");
+        $branchesInline = shell_exec("git branch --merged | egrep -v '(^\*|master)'");
+
+        $result = '';
+        foreach (explode("\n", trim($branchesInline)) as $branchToRemove) {
+            // Foreach merged branches still existing, we remove them manually
+            $result .= $branchToRemove."\n";
+            $result .= shell_exec(sprintf("git branch -d %s", $branchToRemove));
+        }
+        // Then we clean the repository
+        $result .= shell_exec("git fetch --prune");
 
         return $result;
-
-
-
-        // Add an option to clean also the merged branches
-        /*
-         * git-clean-br() {
-              for br in $(git branch --merged | egrep -v '(^\*|master)'); do
-                git branch -d ${br};
-              done
-              git fetch --prune
-            }
-         */
     }
 }

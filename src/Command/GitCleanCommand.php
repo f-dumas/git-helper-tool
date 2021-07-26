@@ -87,6 +87,7 @@ class GitCleanCommand extends Command
             return;
         }
 
+        $this->outputDisplayer->display('Remove merged branches', "question");
         $this->outputDisplayer->display(
             GitShell::removeMergedBranches()
         );
