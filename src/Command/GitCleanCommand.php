@@ -83,7 +83,6 @@ class GitCleanCommand extends Command
         return false;
     }
 
-
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->initOptionsAndArguments($input);
