@@ -66,11 +66,15 @@ class GitShell
 
     public static function removeMergedBranches(): ?string
     {
-        $branchesInline = shell_exec("git branch --merged | egrep -v '(^\*|master)'");
-
+        $branchesInline = trim(shell_exec("git branch --merged | egrep -v '(^\*|master)'"));
         $result = '';
+
+        if(empty($branchesInline)) {
+            return 'Nothing to remove';
+        }
+
         foreach (explode("\n", trim($branchesInline)) as $branchToRemove) {
-            // Foreach merged branches still existing, we remove them manually
+            // Clean local branches that have already been merged to master
             $result .= $branchToRemove."\n";
             $result .= shell_exec(sprintf("git branch -d %s", $branchToRemove));
         }
