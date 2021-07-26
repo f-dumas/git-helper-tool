@@ -63,4 +63,23 @@ class GitShell
     {
         return shell_exec("git clean -df");
     }
+
+    public static function removeMergedBranches()
+    {
+        $result = shell_exec("$(git branch --merged | egrep -v '(^\*|master)')");
+
+        return $result;
+
+
+
+        // Add an option to clean also the merged branches
+        /*
+         * git-clean-br() {
+              for br in $(git branch --merged | egrep -v '(^\*|master)'); do
+                git branch -d ${br};
+              done
+              git fetch --prune
+            }
+         */
+    }
 }
