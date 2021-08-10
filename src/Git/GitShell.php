@@ -4,14 +4,16 @@ namespace FDTool\GitChecker\Git;
 
 class GitShell
 {
-    public static function isMasterBranch(string $gitProjectPath): bool
+    public static function checkCurrentBranch(string $gitProjectPath, string $branchToCompare = 'master'): void
     {
         $result = trim(
             shell_exec(
                 sprintf("cd %s && (git branch | grep -F '*' | awk '{print $2}')", $gitProjectPath)
             )
         );
-        return ($result === "master");
+        if($result !== $branchToCompare) {
+            throw new \RuntimeException($result);
+        }
     }
 
     public static function hasModifiedFiles(string $gitProjectPath): bool

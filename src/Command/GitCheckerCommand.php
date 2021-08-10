@@ -96,8 +96,17 @@ class GitCheckerCommand extends Command
 
     private function checkProjectOnCustomBranches(string $folder): void
     {
-        if (!$this->ignoreMasterCheck && !GitShell::isMasterBranch($folder)) {
-            $this->addProjectToNonConformList($folder, self::REASON_NOT_ON_MASTER);
+        if ($this->ignoreMasterCheck) {
+            return;
+        }
+
+        try {
+            GitShell::checkCurrentBranch($folder);
+        } catch (\RuntimeException $e) {
+            $this->addProjectToNonConformList(
+                sprintf('%s - %s', $folder, $e->getMessage()),
+                self::REASON_NOT_ON_MASTER
+            );
         }
     }
 
